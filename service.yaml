@@ -1,0 +1,14 @@
+# service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: homework-service
+  namespace: homework
+spec:
+  type: NodePort
+  selector:
+    name: homework-pod  
+  ports:
+    - port: 30007
+      targetPort: 80
+      nodePort: 30008  
