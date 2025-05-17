@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homework-deployment
+  namespace: homework
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: homework-pod
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        name: homework-pod
+    spec:
+      serviceAccountName: monitoring
+      volumes:
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: kuber-pvc
+        - name: config
+          configMap:
+            name: kuber-cm
+      initContainers:
+        - name: init-container
+          image: busybox
+          command: ["/bin/sh", "-c"]
+          args:
+            - wget -O /init/index.html https://example.com;
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /init
+      containers:
+        - name: web-server
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /usr/share/nginx/html
+            - name: config
+              mountPath: "/homework/conf"
+              readOnly: true
+          readinessProbe:
+            exec:
+              command:
+                - ls
+                - /usr/share/nginx/html/index.html
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "ln -s /homework/conf /usr/share/nginx/html"]
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -f /usr/share/nginx/html/index.html && rm -r /usr/share/nginx/html/conf"]
