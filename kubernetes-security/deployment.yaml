@@ -1,0 +1,71 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: homework-deployment
+  namespace: homework
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: homework-pod
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxUnavailable: 1
+  template:
+    metadata:
+      labels:
+        name: homework-pod
+    spec:
+      serviceAccountName: monitoring  
+      volumes:
+        - name: shared-volume
+          persistentVolumeClaim:
+            claimName: kuber-pvc
+        - name: config
+          configMap:
+            name: kuber-cm
+        - name: metrics-volume
+          emptyDir: {}  
+      initContainers:
+        - name: init-container
+          image: busybox
+          command: ["/bin/sh", "-c"]
+          args:
+            - |
+              wget -O /init/index.html https://example.com
+              wget -O /metrics/metrics.html "https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/metrics" \
+                --header "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+                --no-check-certificate
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /init
+            - name: metrics-volume
+              mountPath: /metrics
+      containers:
+        - name: web-server
+          image: nginx:alpine
+          ports:
+            - containerPort: 80
+          volumeMounts:
+            - name: shared-volume
+              mountPath: /usr/share/nginx/html
+            - name: config
+              mountPath: "/homework/conf"
+              readOnly: true
+            - name: metrics-volume
+              mountPath: /usr/share/nginx/html/metrics
+          readinessProbe:
+            exec:
+              command:
+                - ls
+                - /usr/share/nginx/html/index.html
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          lifecycle:
+            postStart:
+              exec:
+                command: ["/bin/sh", "-c", "ln -s /homework/conf /usr/share/nginx/html && ln -s /usr/share/nginx/html/metrics/metrics.html /usr/share/nginx/html/metrics.html"]
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "rm -f /usr/share/nginx/html/index.html && rm -r /usr/share/nginx/html/conf && rm -f /usr/share/nginx/html/metrics.html && rm -rf /usr/share/nginx/html/metrics"]
