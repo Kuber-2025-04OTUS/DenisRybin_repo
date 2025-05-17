@@ -17,7 +17,7 @@ spec:
       labels:
         name: homework-pod
     spec:
-      serviceAccountName: monitoring
+      serviceAccountName: monitoring  
       volumes:
         - name: shared-volume
           persistentVolumeClaim:
@@ -25,15 +25,23 @@ spec:
         - name: config
           configMap:
             name: kuber-cm
+        - name: metrics-volume
+          emptyDir: {}  
       initContainers:
         - name: init-container
           image: busybox
           command: ["/bin/sh", "-c"]
           args:
-            - wget -O /init/index.html https://example.com;
+            - |
+              wget -O /init/index.html https://example.com
+              wget -O /metrics/metrics.html "https://${KUBERNETES_SERVICE_HOST}:${KUBERNETES_SERVICE_PORT}/metrics" \
+                --header "Authorization: Bearer $(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+                --no-check-certificate
           volumeMounts:
             - name: shared-volume
               mountPath: /init
+            - name: metrics-volume
+              mountPath: /metrics
       containers:
         - name: web-server
           image: nginx:alpine
@@ -45,6 +53,8 @@ spec:
             - name: config
               mountPath: "/homework/conf"
               readOnly: true
+            - name: metrics-volume
+              mountPath: /usr/share/nginx/html/metrics
           readinessProbe:
             exec:
               command:
@@ -55,7 +65,7 @@ spec:
           lifecycle:
             postStart:
               exec:
-                command: ["/bin/sh", "-c", "ln -s /homework/conf /usr/share/nginx/html"]
+                command: ["/bin/sh", "-c", "ln -s /homework/conf /usr/share/nginx/html && ln -s /usr/share/nginx/html/metrics/metrics.html /usr/share/nginx/html/metrics.html"]
             preStop:
               exec:
-                command: ["/bin/sh", "-c", "rm -f /usr/share/nginx/html/index.html && rm -r /usr/share/nginx/html/conf"]
+                command: ["/bin/sh", "-c", "rm -f /usr/share/nginx/html/index.html && rm -r /usr/share/nginx/html/conf && rm -f /usr/share/nginx/html/metrics.html && rm -rf /usr/share/nginx/html/metrics"]
