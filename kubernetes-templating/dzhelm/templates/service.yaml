@@ -1,0 +1,13 @@
+# service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.namespace }}-service
+  namespace: {{ .Values.namespace }}
+spec:
+  type: ClusterIP
+  selector:
+    name: {{ .Values.namespace }}-pod  
+  ports:
+    - port: {{ .Values.containers.web.port }}
+      protocol: TCP

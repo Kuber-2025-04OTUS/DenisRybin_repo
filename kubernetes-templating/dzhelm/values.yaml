@@ -1,0 +1,27 @@
+namespace: homework
+replicas: 1
+containers:
+  enable_probes: "yes"
+  probe:
+    readinessProbe:
+      exec:
+        command:
+          - ls
+          - /usr/share/nginx/html/index.html
+      initialDelaySeconds: 5
+      periodSeconds: 5
+  init:
+    name: init-container
+    image: busybox
+  web:
+    name: web-server
+    image: nginx:alpine
+    port: 80
+
+redis:
+  enabled: true
+  auth:
+    password: "my-redis-pass"
+  master:
+    persistence:
+      enabled: true
