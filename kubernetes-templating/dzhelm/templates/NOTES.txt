@@ -1,0 +1,2 @@
+Доступ к сервису можно получить по адресу:
+http://homework.otus:{{ .Values.containers.web.port }}/metrics.html
