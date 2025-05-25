@@ -1,0 +1,27 @@
+replicaCount: 5
+
+image:
+  tag: 3.5.2-debian-11-r0
+
+zookeeper:
+  enabled: true
+
+kraft:
+  enabled: false
+
+auth:
+  enabled: true
+  mechanism: sasl
+  sasl:
+    mechanisms: PLAIN
+    interBrokerMechanism: PLAIN
+  clientProtocol: sasl
+  interBrokerProtocol: sasl
+  clientUsers:
+    - user
+  interBrokerUser: user
+  existingSecret: kafka-auth-secret
+
+config:
+  process.roles: "broker"
+  controller.quorum.voters: ""
