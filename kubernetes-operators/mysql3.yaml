@@ -1,7 +1,7 @@
 apiVersion: otus.homework/v1
 kind: MySQL
 metadata:
-  name: example-mysql-2
+  name: example-mysql-3
   namespace: default
 spec:
   image: mysql:8.0
