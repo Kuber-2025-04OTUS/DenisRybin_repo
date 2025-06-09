@@ -1,0 +1,28 @@
+nodeSelector:
+  purpose: infra
+
+tolerations:
+  - key: "node-role"
+    operator: "Equal"
+    value: "infra"
+    effect: "NoSchedule"
+
+adminPassword: admin
+
+persistence:
+  enabled: true
+  size: 1Gi
+
+datasources:
+  datasources.yaml:
+    apiVersion: 1
+    datasources:
+      - name: Loki
+        type: loki
+        access: proxy
+        url: http://loki.loki.svc.cluster.local:3100
+        isDefault: true
+
+service:
+  type: LoadBalancer
+
