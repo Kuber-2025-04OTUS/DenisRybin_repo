@@ -1,0 +1,40 @@
+global:
+  enabled: true
+  tlsDisable: true
+
+server:
+  enabled: true
+  ha:
+    enabled: true
+    replicas: 3
+    raft: 
+      enabled: false
+    config: |
+      ui = true
+
+      listener "tcp" {
+        address     = "0.0.0.0:8200"
+        tls_disable = true
+      }
+
+      storage "consul" {
+        address = "consul-server.consul:8500"
+        path    = "vault/"
+      }
+
+      service_registration "kubernetes" {}
+
+  dataStorage:
+    enabled: false
+
+  readinessProbe:
+    enabled: false
+
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+
