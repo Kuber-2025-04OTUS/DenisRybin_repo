@@ -1,0 +1,18 @@
+# kubernetes-csi/test-pod.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: s3-test-pod
+spec:
+  containers:
+    - name: app
+      image: busybox
+      command: [ "sh", "-c", "echo Hello CSI > /data/hello.txt && sleep 3600" ]
+      volumeMounts:
+        - name: s3-volume
+          mountPath: /data
+  volumes:
+    - name: s3-volume
+      persistentVolumeClaim:
+        claimName: s3-pvc
+

@@ -1,0 +1,12 @@
+# kubernetes-csi/pvc.yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: s3-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 300Mi
+  storageClassName: yyandex-s3-csi
